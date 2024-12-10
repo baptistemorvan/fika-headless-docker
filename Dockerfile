@@ -1,5 +1,4 @@
 FROM debian:bookworm
-USER root
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -10,8 +9,12 @@ ENV NVIDIA_VISIBLE_DEVICES=all
 RUN ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
     apt-get update && \
     apt-get install -y tzdata && \
-    dpkg-reconfigure --frontend noninteractive tzdata
+    dpkg-reconfigure --frontend noninteractive tzdata && \
+    adduser -D -h /home/container container
 
+USER container
+ENV  USER=container HOME=/home/container
+    
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     vim \
@@ -67,7 +70,7 @@ ENV WINEPREFIX /.wine
 # winetricks dotnet48 doesn't install on win64
 ENV WINEARCH win64
 
-WORKDIR /
+WORKDIR /home/container
 
 # Install wineprefix deps
 # Have to run these separately for some reason or else they fail
@@ -115,5 +118,5 @@ ENV WINE_BIN_PATH=/wine-ge/lutris-GE-Proton8-26-x86_64/bin
 COPY ./scripts/purge_logs.sh /usr/bin/purge_logs
 COPY ./data/cron/cron_purge_logs /opt/cron/cron_purge_logs
 
-COPY entrypoint.sh /usr/bin/entrypoint
-ENTRYPOINT ["/usr/bin/entrypoint"]
+COPY ./entrypoint.sh /entrypoint.sh
+CMD ["/bin/bash", "/entrypoint.sh"]

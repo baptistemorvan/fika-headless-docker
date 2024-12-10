@@ -115,7 +115,8 @@ raid_end_routine() {
 # or via watching the PID
 run_client() {
     echo "Using wine executable $WINE_BIN_PATH/wine"
-    WINEDEBUG=-all $xvfb_run $WINE_BIN_PATH/wine $eft_binary $batchmode $nographics $nodynamicai -token="$PROFILE_ID" -config="{'BackendUrl':'http://$SERVER_URL:$SERVER_PORT', 'Version':'live'}" &> $wine_logfile &
+    MODIFIED_STARTUP=`eval echo $(echo ${STARTUP} | sed -e 's/{{/${/g' -e 's/}}/}/g')`
+    WINEDEBUG=-all $xvfb_run $WINE_BIN_PATH/wine $eft_binary $MODIFIED_STARTUP  &> $wine_logfile &
 
     eft_pid=$!
     echo "EFT PID is $eft_pid"
