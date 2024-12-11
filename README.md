@@ -1,5 +1,6 @@
 # About
 :new_moon_with_face: Run the FIKA dedicated client as a headless service, in a docker container! :new_moon_with_face:
+Fork of fika-headless-client for Pterodactyl panel
 
 - [🧙 Features](#-features)
 - [👻 Dedicated Client](#-dedicated-client)
