@@ -61,11 +61,14 @@ RUN curl -SL 'https://raw.githubusercontent.com/Winetricks/winetricks/master/src
 RUN locale-gen en_US.UTF-8
 ENV LANG en_US.UTF-8
 
-ENV HOME /
-ENV WINEPREFIX /.wine
+ENV HOME /home/container
+ENV WINEPREFIX /home/container/.wine
 
 # winetricks dotnet48 doesn't install on win64
 ENV WINEARCH win64
+
+USER container
+ENV  USER=container HOME=/home/container
 
 WORKDIR /home/container
 
@@ -114,8 +117,7 @@ ENV WINE_BIN_PATH=/wine-ge/lutris-GE-Proton8-26-x86_64/bin
 
 RUN adduser --disabled-password --home /home/container container
 
-USER container
-ENV  USER=container HOME=/home/container
+
 
 COPY ./scripts/purge_logs.sh /usr/bin/purge_logs
 COPY ./data/cron/cron_purge_logs /opt/cron/cron_purge_logs
