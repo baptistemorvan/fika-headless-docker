@@ -78,11 +78,11 @@ WORKDIR /home/container
 # Have to run these separately for some reason or else they fail
 RUN winetricks arial times 
 # Cache vcredist installer direct from MS to bypass downloading from web.archive.org
-RUN mkdir -p /.cache/winetricks/ucrtbase2019
+RUN mkdir -p /home/container/.cache/winetricks/ucrtbase2019
 RUN curl -SL 'https://download.visualstudio.microsoft.com/download/pr/85d47aa9-69ae-4162-8300-e6b7e4bf3cf3/14563755AC24A874241935EF2C22C5FCE973ACB001F99E524145113B2DC638C1/VC_redist.x86.exe' \
-    -o /.cache/winetricks/ucrtbase2019/VC_redist.x86.exe
+    -o /home/container/.cache/winetricks/ucrtbase2019/VC_redist.x86.exe
 RUN curl -SL 'https://download.visualstudio.microsoft.com/download/pr/85d47aa9-69ae-4162-8300-e6b7e4bf3cf3/52B196BBE9016488C735E7B41805B651261FFA5D7AA86EB6A1D0095BE83687B2/VC_redist.x64.exe' \
-    -o /.cache/winetricks/ucrtbase2019/VC_redist.x64.exe
+    -o /home/container/.cache/winetricks/ucrtbase2019/VC_redist.x64.exe
 RUN xvfb-run -a winetricks -q vcrun2019 dotnetdesktop8
 
 ENV PROFILE_ID=test
