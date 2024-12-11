@@ -10,7 +10,7 @@ RUN ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
     apt-get update && \
     apt-get install -y tzdata && \
     dpkg-reconfigure --frontend noninteractive tzdata && \
-    adduser -D -h /home/container container
+    adduser --disabled-password --home /home/container container
 
 USER container
 ENV  USER=container HOME=/home/container
