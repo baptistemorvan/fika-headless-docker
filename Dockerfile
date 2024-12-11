@@ -1,4 +1,5 @@
 FROM debian:bookworm
+USER root
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -9,11 +10,7 @@ ENV NVIDIA_VISIBLE_DEVICES=all
 RUN ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
     apt-get update && \
     apt-get install -y tzdata && \
-    dpkg-reconfigure --frontend noninteractive tzdata && \
-    adduser --disabled-password --home /home/container container
-
-USER container
-ENV  USER=container HOME=/home/container
+    dpkg-reconfigure --frontend noninteractive tzdata
     
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -114,6 +111,11 @@ RUN apt-get update \
 RUN mkdir /wine-ge && \
     curl -sL "https://github.com/GloriousEggroll/wine-ge-custom/releases/download/GE-Proton8-26/wine-lutris-GE-Proton8-26-x86_64.tar.xz" | tar xvJ -C /wine-ge
 ENV WINE_BIN_PATH=/wine-ge/lutris-GE-Proton8-26-x86_64/bin
+
+RUN adduser --disabled-password --home /home/container container
+
+USER container
+ENV  USER=container HOME=/home/container
 
 COPY ./scripts/purge_logs.sh /usr/bin/purge_logs
 COPY ./data/cron/cron_purge_logs /opt/cron/cron_purge_logs
