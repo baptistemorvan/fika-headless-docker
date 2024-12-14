@@ -1,5 +1,4 @@
-FROM debian:bookworm
-USER root
+FROM ghcr.io/parkervcp/yolks:debian
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -11,7 +10,7 @@ RUN ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
     apt-get update && \
     apt-get install -y tzdata && \
     dpkg-reconfigure --frontend noninteractive tzdata
-    
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     vim \
@@ -41,9 +40,7 @@ RUN apt-get update \
     xauth \
     xcvt \
     xserver-xorg-core \
-    xvfb \
-    cron \
-    xz-utils
+    xvfb
 
 ARG WINE_BRANCH="devel"
 
@@ -63,28 +60,21 @@ RUN curl -SL 'https://raw.githubusercontent.com/Winetricks/winetricks/master/src
 RUN locale-gen en_US.UTF-8
 ENV LANG en_US.UTF-8
 
-ENV HOME /home/container
-ENV WINEPREFIX /home/container/.wine
 
 # winetricks dotnet48 doesn't install on win64
 ENV WINEARCH win64
-
-RUN adduser --disabled-password --home /home/container container
-
-USER container
-ENV  USER=container HOME=/home/container
-
-WORKDIR /home/container
-
+ENV HOME /home/container
+ENV WINEPREFIX /home/container/.wine
 # Install wineprefix deps
 # Have to run these separately for some reason or else they fail
+USER container
 RUN winetricks arial times 
 # Cache vcredist installer direct from MS to bypass downloading from web.archive.org
-RUN mkdir -p /home/container/.cache/winetricks/ucrtbase2019
+RUN mkdir -p .cache/winetricks/ucrtbase2019
 RUN curl -SL 'https://download.visualstudio.microsoft.com/download/pr/85d47aa9-69ae-4162-8300-e6b7e4bf3cf3/14563755AC24A874241935EF2C22C5FCE973ACB001F99E524145113B2DC638C1/VC_redist.x86.exe' \
-    -o /home/container/.cache/winetricks/ucrtbase2019/VC_redist.x86.exe
+    -o .cache/winetricks/ucrtbase2019/VC_redist.x86.exe
 RUN curl -SL 'https://download.visualstudio.microsoft.com/download/pr/85d47aa9-69ae-4162-8300-e6b7e4bf3cf3/52B196BBE9016488C735E7B41805B651261FFA5D7AA86EB6A1D0095BE83687B2/VC_redist.x64.exe' \
-    -o /home/container/.cache/winetricks/ucrtbase2019/VC_redist.x64.exe
+    -o .cache/winetricks/ucrtbase2019/VC_redist.x64.exe
 RUN xvfb-run -a winetricks -q vcrun2019 dotnetdesktop8
 
 ENV PROFILE_ID=test
@@ -104,19 +94,23 @@ ENV TERM=xterm
 
 # Copy over all modified reg files to prefix in container
 # Wineprefix set overrides winhttp n,b for bepinex
-COPY ./data/reg/user.reg /.wine/
-COPY ./data/reg/system.reg /.wine/
+COPY ./data/reg/user.reg .wine/
+COPY ./data/reg/system.reg .wine/
 
 # Copy nvidia init script
 COPY ./scripts/install_nvidia_deps.sh /opt/scripts/
 
 # wine-ge
-RUN mkdir /home/container/wine-ge && \
-    curl -sL "https://github.com/GloriousEggroll/wine-ge-custom/releases/download/GE-Proton8-26/wine-lutris-GE-Proton8-26-x86_64.tar.xz" | tar xvJ -C /home/container/wine-ge
-ENV WINE_BIN_PATH=/home/container/wine-ge/lutris-GE-Proton8-26-x86_64/bin
+# RUN apt-get update \
+#     && apt-get install -y --no-install-recommends \
+#     cron \
+#     xz-utils
+# RUN mkdir wine-ge && \
+#     curl -sL "https://github.com/GloriousEggroll/wine-ge-custom/releases/download/GE-Proton8-26/wine-lutris-GE-Proton8-26-x86_64.tar.xz" | tar xvJ -C wine-ge
+# ENV WINE_BIN_PATH=wine-ge/lutris-GE-Proton8-26-x86_64/bin
 
 COPY ./scripts/purge_logs.sh /usr/bin/purge_logs
 COPY ./data/cron/cron_purge_logs /opt/cron/cron_purge_logs
 
 COPY ./entrypoint.sh /entrypoint.sh
-CMD ["/bin/bash", "/entrypoint.sh"]
+CMD [ "/bin/bash", "/entrypoint.sh" ]
