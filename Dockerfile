@@ -1,4 +1,5 @@
-FROM ghcr.io/parkervcp/yolks:debian
+FROM debian:bookworm
+USER root
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -60,14 +61,16 @@ RUN curl -SL 'https://raw.githubusercontent.com/Winetricks/winetricks/master/src
 RUN locale-gen en_US.UTF-8
 ENV LANG en_US.UTF-8
 
+ENV HOME /home/container
+ENV WINEPREFIX /home/container/.wine
 
 # winetricks dotnet48 doesn't install on win64
 ENV WINEARCH win64
-ENV HOME /home/container
-ENV WINEPREFIX /home/container/.wine
+
+WORKDIR /home/container
+
 # Install wineprefix deps
 # Have to run these separately for some reason or else they fail
-USER container
 RUN winetricks arial times 
 # Cache vcredist installer direct from MS to bypass downloading from web.archive.org
 RUN mkdir -p .cache/winetricks/ucrtbase2019
@@ -101,16 +104,22 @@ COPY ./data/reg/system.reg .wine/
 COPY ./scripts/install_nvidia_deps.sh /opt/scripts/
 
 # wine-ge
-# RUN apt-get update \
-#     && apt-get install -y --no-install-recommends \
-#     cron \
-#     xz-utils
-# RUN mkdir wine-ge && \
-#     curl -sL "https://github.com/GloriousEggroll/wine-ge-custom/releases/download/GE-Proton8-26/wine-lutris-GE-Proton8-26-x86_64.tar.xz" | tar xvJ -C wine-ge
-# ENV WINE_BIN_PATH=wine-ge/lutris-GE-Proton8-26-x86_64/bin
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    cron \
+    xz-utils
+RUN mkdir wine-ge && \
+    curl -sL "https://github.com/GloriousEggroll/wine-ge-custom/releases/download/GE-Proton8-26/wine-lutris-GE-Proton8-26-x86_64.tar.xz" | tar xvJ -C wine-ge
+ENV WINE_BIN_PATH=/home/container/wine-ge/lutris-GE-Proton8-26-x86_64/bin
 
 COPY ./scripts/purge_logs.sh /usr/bin/purge_logs
 COPY ./data/cron/cron_purge_logs /opt/cron/cron_purge_logs
 
-COPY ./entrypoint.sh /entrypoint.sh
-CMD [ "/bin/bash", "/entrypoint.sh" ]
+RUN useradd -m -d /home/container -s /bin/bash container
+
+RUN ln -s /home/container/ /nonexistent
+
+ENV USER=container HOME=/home/container
+
+COPY --chown=container:container ./entrypoint.sh /entrypoint.sh
+CMD ["/bin/bash", "/entrypoint.sh"]
